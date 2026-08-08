@@ -103,7 +103,7 @@ const TelegramGetDocument = {
                 if (aibitat) {
                   const createFilesLibPath = path.join(
                     __dirname,
-                    "../../create-files/lib"
+                    "../create-files/lib"
                   );
                   const createFilesLib = require(createFilesLibPath);
                   createFilesLib.registerOutput(aibitat, "TelegramDocument", {
