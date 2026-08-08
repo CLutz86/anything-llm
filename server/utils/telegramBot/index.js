@@ -750,7 +750,7 @@ class TelegramBotService {
       return;
     }
 
-    // Document messages: parse and send extracted text to LLM
+    // Document messages: parse, save locally, and send extracted text to LLM
     if (msg.document) {
       this.#queue.enqueue(chatId, async () => {
         try {
@@ -760,6 +760,22 @@ class TelegramBotService {
             ctx.bot,
             msg.document.file_id
           );
+
+          // Save document locally for later retrieval
+          try {
+            const localDocumentStorage = require("./utils/localDocumentStorage");
+            await localDocumentStorage.saveDocument({
+              chatId,
+              fileId: msg.document.file_id,
+              originalName: filename,
+              buffer: docBuffer,
+              mimeType: msg.document.mime_type,
+            });
+          } catch (saveError) {
+            this.#log("Failed to save document locally:", saveError.message);
+            // Non-blocking: continue even if local save fails
+          }
+
           const { text, filename: docName } = await documentToText(
             docBuffer,
             filename

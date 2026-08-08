@@ -14,6 +14,7 @@ const { googleCalendarAgent } = require("./google-calendar/index.js");
 const { requestUserInput } = require("./request-user-input.js");
 const { createScheduledJob } = require("./create-scheduled-job/index.js");
 const { modelRouterCooldown } = require("./model-router-cooldown.js");
+const { telegramDocumentsAgent } = require("./telegram-documents/index.js");
 
 module.exports = {
   webScraping,
@@ -32,6 +33,7 @@ module.exports = {
   requestUserInput,
   createScheduledJob,
   modelRouterCooldown,
+  telegramDocumentsAgent,
 
   // Plugin name aliases so they can be pulled by slug as well.
   [webScraping.name]: webScraping,
@@ -50,4 +52,5 @@ module.exports = {
   [requestUserInput.name]: requestUserInput,
   [createScheduledJob.name]: createScheduledJob,
   [modelRouterCooldown.name]: modelRouterCooldown,
+  [telegramDocumentsAgent.name]: telegramDocumentsAgent,
 };

@@ -333,6 +333,13 @@ async function handleAgentResponse(
       ctx.log?.info?.(`Sending ${_files.length} file(s) to Telegram`);
       await sendFilesAsTelegramDocuments(ctx, chatId, _files);
     }
+
+    // Send stored Telegram documents back to the chat (from telegram-documents plugin)
+    const telegramDocs = outputs.filter((o) => o.type === "TelegramDocument");
+    if (telegramDocs.length > 0) {
+      ctx.log?.info?.(`Sending ${telegramDocs.length} stored document(s) to Telegram`);
+      await sendStoredTelegramDocuments(ctx, chatId, telegramDocs);
+    }
   } finally {
     clearInterval(typingInterval);
     clearTimeout(thoughtFlushTimeout);
@@ -380,6 +387,60 @@ async function sendFilesAsTelegramDocuments(ctx, chatId, files) {
     } catch (err) {
       ctx.log?.error?.(
         `Failed to send document ${file.filename}:`,
+        err.message
+      );
+    }
+  }
+}
+
+/**
+ * Send stored Telegram documents back to the chat.
+ * These are documents that were previously uploaded by the user and stored locally.
+ * @param {import("../commands").BotContext} ctx
+ * @param {number} chatId
+ * @param {Array<{type: string, payload: {buffer?: Buffer, filename: string, mimeType: string, storedName: string}}>} telegramDocs
+ */
+async function sendStoredTelegramDocuments(ctx, chatId, telegramDocs) {
+  const localDocumentStorage = require("../utils/localDocumentStorage");
+  for (const doc of telegramDocs) {
+    try {
+      const payload = doc.payload || {};
+      let buffer = payload.buffer;
+
+      // If no inline buffer, load from storage
+      if (!buffer && payload.storedName) {
+        const result = await localDocumentStorage.getDocument(payload.storedName);
+        if (result) {
+          buffer = result.buffer;
+        }
+      }
+
+      if (!buffer) {
+        ctx.log?.warn?.(
+          `Could not retrieve stored document: ${payload.filename || "unknown"}`
+        );
+        continue;
+      }
+
+      const filename = payload.filename || "document";
+      const mimeType = payload.mimeType || "application/octet-stream";
+
+      ctx.log?.info?.(
+        `Sending stored document: ${filename} (${buffer.length} bytes, ${mimeType})`
+      );
+      await ctx.bot.sendDocument(
+        chatId,
+        buffer,
+        { caption: filename },
+        {
+          filename,
+          contentType: mimeType,
+        }
+      );
+      ctx.log?.info?.(`Successfully sent stored document: ${filename}`);
+    } catch (err) {
+      ctx.log?.error?.(
+        `Failed to send stored document:`,
         err.message
       );
     }
