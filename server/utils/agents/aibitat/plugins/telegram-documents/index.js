@@ -1,5 +1,5 @@
 const path = require("path");
-const localDocumentStorage = require("../../../telegramBot/utils/localDocumentStorage");
+const localDocumentStorage = require("../../../../telegramBot/utils/localDocumentStorage");
 
 const TelegramGetDocument = {
   name: "telegram-get-document",
